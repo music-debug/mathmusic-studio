@@ -6,6 +6,7 @@ import threading
 import midi_search
 import suggestions
 import score_import
+import sheet_omr
 from urllib.parse import parse_qs
 ROOT=Path(__file__).resolve().parent
 ASSETS={name for name in ('index.html','style.css','engine.js','app.js','worker.js','analysis.js','upload.js','waveform.js','waveform-ui.js','neural.js','midi.js','song-search.js','suggestions.js','settings.js')}
@@ -21,7 +22,22 @@ def application(env,start_response):
             q=parse_qs(env.get('QUERY_STRING',''))
             return reply('200 OK',suggestions.suggest(q.get('q',[''])[0],q.get('kind',['song'])[0],q.get('artist',[''])[0]))
         except ValueError as error:return reply('400 Bad Request',{'error':str(error)})
-    if method=='GET' and path=='/api/status':return reply('200 OK',{'ffmpeg':False,'songModels':False,'cloud':True})
+    if method=='GET' and path=='/api/status':return reply('200 OK',{'ffmpeg':False,'songModels':False,'cloud':True,'sheetReader':bool(sheet_omr.executable())})
+    if path in ('/api/sheet-start','/api/sheet-job'):
+        origin=env.get('HTTP_ORIGIN')
+        if origin and origin.split('://',1)[-1]!=env.get('HTTP_HOST'):return reply('403 Forbidden',{'error':'Open sheet recognition from this Studio website.'})
+        try:
+            if method=='GET' and path=='/api/sheet-job':
+                query=parse_qs(env.get('QUERY_STRING',''))
+                return reply('200 OK',sheet_omr.get(query.get('id',[''])[0]))
+            if method=='POST' and path=='/api/sheet-start':
+                size=int(env.get('CONTENT_LENGTH') or 0)
+                if not 0<size<=6*1024*1024:raise ValueError('Choose a sheet smaller than 6 MB.')
+                data=env['wsgi.input'].read(size)
+                if len(data)!=size:raise ValueError('Incomplete sheet upload.')
+                return reply('200 OK',sheet_omr.start(data))
+            return reply('405 Method Not Allowed',{'error':'Unsupported sheet request.'})
+        except (ValueError,OSError) as error:return reply('400 Bad Request',{'error':str(error)})
     if method=='POST' and path=='/api/score-import':
         origin=env.get('HTTP_ORIGIN')
         if origin and origin.split('://',1)[-1]!=env.get('HTTP_HOST'):return reply('403 Forbidden',{'error':'Open scores from this Studio website.'})

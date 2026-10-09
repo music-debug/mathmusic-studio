@@ -1,0 +1,7 @@
+.git
+__pycache__
+*.zip
+.sheet-diagnostics
+.song-cache
+.song-models
+.song-env
