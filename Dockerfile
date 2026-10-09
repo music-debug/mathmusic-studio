@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-venv ca-certificates curl tesseract-ocr-eng fonts-dejavu-core \
-    libasound2t64 libx11-6 libxext6 libxi6 libxrender1 libxtst6 libgl1 \
+    libasound2t64 libx11-6 libxext6 libxi6 libxrender1 libxtst6 libgl1 libgtk-3-0t64 \
     && rm -rf /var/lib/apt/lists/*
 RUN curl -fL --retry 3 -o /tmp/audiveris.deb \
     https://github.com/Audiveris/audiveris/releases/download/5.11.0/Audiveris-5.11.0-ubuntu24.04-x86_64.deb \
