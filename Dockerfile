@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -fL --retry 3 -o /tmp/audiveris.deb \
     https://github.com/Audiveris/audiveris/releases/download/5.11.0/Audiveris-5.11.0-ubuntu24.04-x86_64.deb \
     && echo 'f20113aaa33b3149ec8d6a09b2a7963360e65fafd92d69389987a85bbc3ec7a3  /tmp/audiveris.deb' | sha256sum -c - \
-    && apt-get update && apt-get install -y --no-install-recommends /tmp/audiveris.deb \
-    && rm /tmp/audiveris.deb && rm -rf /var/lib/apt/lists/*
+    && dpkg-deb --extract /tmp/audiveris.deb / \
+    && rm /tmp/audiveris.deb
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
